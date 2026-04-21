@@ -23,13 +23,14 @@ from data_loader import (
 from radar_calculations import (
     calculate_square_losses,
     calculate_radar_constant,
+    calculate_radar_constant_without_wf,
     calculate_soft_constant
 )
 
 warnings.filterwarnings('ignore')
 
 
-def process_experiment_file(file_path: str, filename: str) -> np.ndarray:
+def process_experiment_file(file_path: str, filename: str) -> tuple[np.ndarray, np.ndarray]:
     """
     Process a single experiment file and calculate radar constants.
     
@@ -60,8 +61,10 @@ def process_experiment_file(file_path: str, filename: str) -> np.ndarray:
     
     # Calculate radar constant coefficients
     radar_constants = calculate_radar_constant(range_values, received_power, rwf, bwf)
+
+    radar_constants_without_wf = calculate_radar_constant_without_wf(range_values, received_power)
     
-    return radar_constants
+    return radar_constants, radar_constants_without_wf
 
 
 def main():
@@ -80,14 +83,17 @@ def main():
     
     # Process each file and collect radar constants
     all_radar_constants = []
+    all_radar_constants_without_wf = []
     
     for filename in experiment_files:
         file_path = os.path.join(DATA_PATH, filename)
-        radar_constants = process_experiment_file(file_path, filename)
+        radar_constants, radar_constants_without_wf = process_experiment_file(file_path, filename)
         all_radar_constants.append(radar_constants)
-    
+        all_radar_constants_without_wf.append(radar_constants_without_wf)
+
     # Concatenate all results
     combined_constants = np.concatenate(all_radar_constants)
+    combined_constants_without_wf = np.concatenate(all_radar_constants_without_wf)
     
     # Calculate and display statistics
     print("\n" + "=" * 60)
@@ -95,11 +101,13 @@ def main():
     print("=" * 60)
     print(f"Total measurements: {len(combined_constants)}")
     print(f"Mean radar constant: {combined_constants.mean():.6e}")
+    print(f"Mean radar constant without wf: {combined_constants_without_wf.mean():.6e}")
     print(f"Std deviation: {combined_constants.std():.6e}")
     print(f"Min value: {combined_constants.min():.6e}")
     print(f"Max value: {combined_constants.max():.6e}")
     print("=" * 60)
     print(calculate_soft_constant(combined_constants.mean()))
+    print(calculate_soft_constant(combined_constants_without_wf.mean()))
 
 
 if __name__ == "__main__":

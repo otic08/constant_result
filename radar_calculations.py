@@ -79,6 +79,39 @@ def calculate_radar_constant(
     
     return rcc
 
+
+def calculate_radar_constant_without_wf(
+        range_values: np.ndarray,
+        received_power: np.ndarray
+) -> np.ndarray:
+    """
+    Calculate the radar constant coefficient (RCC) without considering
+    the range weighting function (RWF) and beamwidth weighting function
+    (BWF).
+
+    This is derived from the radar equation and represents the constant
+    relating received power to target characteristics and geometry.
+
+    Args:
+        range_values: Distance values in meters
+        received_power: Normalized received power values (0-1)
+
+    Returns:
+        Array of radar constant coefficients
+    """
+    numerator = received_power * (range_values ** 4)
+
+    denominator = (
+            Constants.pT *
+            Constants.sigma *
+            Constants.gLNA
+    )
+
+    rcc = numerator / denominator
+
+    return rcc
+
+
 def calculate_soft_constant(
     hard_targets_constant: float,
 ) -> float:
